@@ -1,11 +1,9 @@
 package com.github.uuidcode.codewriter;
 
 import java.io.File;
-import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 
-import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +20,9 @@ import static lombok.AccessLevel.PRIVATE;
 public class ReplaceFileContentBuilder {
     @Setter(PRIVATE)
     @Getter(PRIVATE)
-    private ReplaceContentBuilder replaceContentBuilder = ReplaceContentBuilder.of();
+    private ReplaceContentBuilder replaceContentBuilder =
+        ReplaceContentBuilder.of();
+
     private File sourceFile;
     private File targetFile;
     private boolean replaceFilePath;
@@ -38,27 +38,31 @@ public class ReplaceFileContentBuilder {
         }
 
         if (this.targetFile == null) {
-            if (this.replaceFilePath) {
-                try {
-                    String targetFilePath = this.replaceContentBuilder
-                        .setContent(this.sourceFile.getCanonicalPath())
-                        .build();
-
-                    this.targetFile = new File(targetFilePath);
-                } catch (Throwable t) {
-                    throw new RuntimeException(t);
-                }
-            } else {
+            if (!this.replaceFilePath) {
                 return;
             }
+
+            this.createTargetFile();
         }
 
-        if (this.sourceFileIsExists()) {
+        if (this.sourceFileExists()) {
             this.replace();
         }
     }
 
-    private boolean sourceFileIsExists() {
+    private void createTargetFile() {
+        try {
+            String targetFilePath = this.replaceContentBuilder
+                .setContent(this.sourceFile.getCanonicalPath())
+                .build();
+
+            this.targetFile = new File(targetFilePath);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    private boolean sourceFileExists() {
         return ofNullable(this.sourceFile)
             .filter(File::exists)
             .filter(File::isFile)
