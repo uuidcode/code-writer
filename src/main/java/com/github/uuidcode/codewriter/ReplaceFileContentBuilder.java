@@ -25,6 +25,7 @@ public class ReplaceFileContentBuilder {
     private ReplaceContentBuilder replaceContentBuilder = ReplaceContentBuilder.of();
     private File sourceFile;
     private File targetFile;
+    private boolean replaceFilePath;
 
     public ReplaceFileContentBuilder replace(String target, String replacement) {
         this.replaceContentBuilder.replace(target, replacement);
@@ -37,7 +38,19 @@ public class ReplaceFileContentBuilder {
         }
 
         if (this.targetFile == null) {
-            return;
+            if (this.replaceFilePath) {
+                try {
+                    String targetFilePath = this.replaceContentBuilder
+                        .setContent(this.sourceFile.getCanonicalPath())
+                        .build();
+
+                    this.targetFile = new File(targetFilePath);
+                } catch (Throwable t) {
+                    throw new RuntimeException(t);
+                }
+            } else {
+                return;
+            }
         }
 
         if (this.sourceFileIsExists()) {
